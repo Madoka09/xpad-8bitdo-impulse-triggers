@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# trigger-mode — control de trigger_rumble_mode para xpad-8bitdo
+set -euo pipefail
+
+PARAM="/sys/module/xpad/parameters/trigger_rumble_mode"
+CONF="/etc/modprobe.d/xpad-trigger-rumble.conf"
+
+declare -A MODES=(
+    [0]="off: Stock behaviour, impulse triggers disabled"
+    [1]="mirror: Impulse triggers follows the same patterns as the strong/weak rumble motors"
+    [2]="pressure: Impulse triggers are pressure sensitive, with a linear response curve"
+    [3]="gc_click: Botched and still on testing way to replicate a GameCube trigger click"
+)
+
+if [[ ! -f "$PARAM" ]]; then
+    echo "❌ The custom xpad-8bitdo module is not installed (or you are not using the version with trigger_rumble_mode)."
+    exit 1
+fi
+
+current=$(cat "$PARAM")
+persisted="None"
+if [[ -f "$CONF" ]]; then
+    persisted=$(grep -oP 'trigger_rumble_mode=\K[0-9]' "$CONF" 2>/dev/null || echo "None")
+fi
+
+echo "🎮 Actual Mode: $current (${MODES[$current]%% —*})"
+echo "💾 Persisted Mode: $persisted"
+echo ""
+echo "Available Modes:"
+for i in 0 1 2 3; do
+    marker=" "
+    [[ "$i" == "$current" ]] && marker="→"
+    echo " $marker [$i] ${MODES[$i]}"
+done
+echo ""
+read -rp "Choose a trigger mode [0-3] (Press enter to exit without changes): " choice
+
+[[ -z "$choice" ]] && echo "No changes made." && exit 0
+
+if [[ ! "$choice" =~ ^[0-3]$ ]]; then
+    echo "❌ Invalid option: $choice"
+    exit 1
+fi
+
+echo "$choice" | sudo tee "$PARAM" > /dev/null
+echo "✅ Mode changed on the fly: $current → $choice"
+
+read -rp "Persist between reboots? [s/N]: " persist
+if [[ "$persist" =~ ^[sS]$ ]]; then
+    echo "options xpad trigger_rumble_mode=$choice" | sudo tee "$CONF" > /dev/null
+    echo "💾 Saved to $CONF"
+else
+    echo "Change only for this session."
+fi
