@@ -1160,20 +1160,20 @@ static void xpadone_process_packet(struct usb_xpad *xpad, u16 cmd, unsigned char
 		
 		/* Gamecube trigger emulation mode */
 		if (trigger_rumble_mode == 3) {
-			if (!xpad->ltrig_clicked && xpad->ltrig_pos > 900) {
+			if (!xpad->ltrig_clicked && xpad->ltrig_pos >= 900) {
 				xpad->ltrig_clicked = true;
 				xpad_send_trigger_click(xpad, true, 0x64);
-			} else if (xpad->ltrig_clicked && xpad->ltrig_pos < 650) {
+			} else if (xpad->ltrig_clicked && xpad->ltrig_pos <= 890) {
 				xpad->ltrig_clicked = false;
-				xpad_send_trigger_click(xpad, true, 0x28);
+				xpad_send_trigger_click(xpad, true, 0x63);
 			}
 
-			if (!xpad->rtrig_clicked && xpad->rtrig_pos > 900) {
+			if (!xpad->rtrig_clicked && xpad->rtrig_pos >= 900) {
 				xpad->rtrig_clicked = true;
 				xpad_send_trigger_click(xpad, false, 0x64);
-			} else if (xpad->rtrig_clicked && xpad->rtrig_pos < 650) {
+			} else if (xpad->rtrig_clicked && xpad->rtrig_pos <= 890) {
 				xpad->rtrig_clicked = false;
-				xpad_send_trigger_click(xpad, false, 0x28);
+				xpad_send_trigger_click(xpad, false, 0x63);
 			}
 		}
 
@@ -1397,7 +1397,7 @@ static void xpad_send_trigger_click(struct usb_xpad *xpad, bool left, u8 magnitu
 	packet->data[7] = left ? 0x00 : magnitude;
 	packet->data[8] = 0x00;
 	packet->data[9] = 0x00;
-	packet->data[10] = 0x06; /* on period: short pulse, will conflict with normal strong/weak rumble */
+	packet->data[10] = 0x02; /* on period: short pulse, will conflict with normal strong/weak rumble */
 	packet->data[11] = 0x00;
 	packet->data[12] = 0x00; /* no repeat */
 	packet->len = 13;
