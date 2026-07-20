@@ -18,6 +18,8 @@ GPL-2.0 (derived from the Linux kernel xpad driver)
 ## Install
 
 ```Shell
+git clone https://github.com/Madoka09/xpad-8bitdo-impulse-triggers.git
+cd xpad-8bitdo-impulse-triggers
 sudo cp -r . /usr/src/xpad-8bitdo-1.0
 sudo dkms install xpad-8bitdo/1.0
 sudo modprobe -r xpad && sudo modprobe xpad
